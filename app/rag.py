@@ -1,11 +1,15 @@
 from sqlalchemy import text
-from google import genai
+import google.generativeai as genai
 
 from app.db import engine
 from app.embeddings import embed_model
 from app.config import GEMINI_API_KEY
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+# Configure Gemini
+genai.configure(api_key=GEMINI_API_KEY)
+
+# Load model
+model = genai.GenerativeModel("models/gemini-2.5-flash")
 
 
 def get_relevant_careers(query: str, top_k: int = 5) -> str:
@@ -49,9 +53,8 @@ Based on the above data, explain which careers fit the user
 and why. Be concise, structured, and helpful.
 """
 
-    response = client.models.generate_content(
-        model="models/gemini-2.5-flash",
-        contents=prompt
-    )
-
-    return response.text
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"Error generating response: {str(e)}"
